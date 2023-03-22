@@ -1,0 +1,189 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Making your first Phaser 3 Game - Part 1</title>
+    <script src=https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js integrity="sha512-kg6fSrg6FkD9Ua02PzuA289KatVkTp6HdiFrSKwnz1bKBeKe5JG54rNeYZeghYO/I4ka49rb9H/9Ezcq9Se3iQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+    var config = {
+        type: Phaser.AUTO,
+        width: 960,
+        height: 480,
+        physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 300 },
+            debug: false
+        }
+    },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+    var x = 9;
+    var y = 23;
+    var i = 0;
+    var cursors;
+    var player;
+    var walls;
+    var game = new Phaser.Game(config);
+
+    function preload ()
+    {
+        this.load.image('background', 'assets/background4b.png');
+        this.load.spritesheet('guy',  'assets/characters/player.png', { frameWidth: 32, frameHeight: 48 });
+        this.load.image('wallup', 'assets/tilesets/walls/wall1.png');
+        this.load.image('wallside', 'assets/tilesets/walls/wall2.png');
+    }
+
+    function create ()
+    {
+        this.add.image(480,240,'background');
+        walls = this.physics.add.staticGroup();
+
+        //wall up//
+        walls.create(25,21,'wallup');
+        walls.create(70,21,'wallup');
+        walls.create(115,21,'wallup');
+        walls.create(160,21,'wallup');
+        walls.create(160,21,'wallup');
+        walls.create(205,21,'wallup');
+        walls.create(250,21,'wallup');
+        walls.create(295,21,'wallup');
+        walls.create(340,21,'wallup');
+        walls.create(385,21,'wallup');
+        walls.create(430,21,'wallup');
+        walls.create(475,21,'wallup');
+        walls.create(520,21,'wallup');
+        walls.create(565,21,'wallup');
+        walls.create(610,21,'wallup');
+        walls.create(655,21,'wallup');
+        walls.create(700,21,'wallup');
+        walls.create(745,21,'wallup');
+        walls.create(790,21,'wallup');
+        walls.create(835,21,'wallup');
+        walls.create(880,21,'wallup');
+        walls.create(925,21,'wallup');
+        walls.create(990,21,'wallup');
+
+        //Wall side left//
+        
+        for (let i = 0; i < 80; i++) {
+  walls.create(9, 23 + (6 * i),'wallside');
+}
+         
+
+         //Wall side left//
+         for (let i = 0; i < 80; i++) {
+             walls.create(950, 15 + (6 * i),'wallside');
+         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        player = this.physics.add.sprite(100, 450, 'guy');
+
+        player.setCollideWorldBounds(true);
+
+        this.anims.create({
+        key: 'face down',
+        frames: this.anims.generateFrameNumbers('guy', {start: 0, end: 5}),
+        frameRate: 10,
+       
+    });
+
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('guy', { start: 12, end: 14 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    
+    this.anims.create({
+        key: 'up',
+        frames: this.anims.generateFrameNumbers('guy', {start: 12, end: 35}),
+        frameRate: 10,
+        repeat: -1
+    });
+
+
+    this.anims.create({
+        key: 'down',
+        frames: this.anims.generateFrameNumbers('guy', {start: 18, end: 23}),
+        frameRate: 10,
+        repeat: -1
+    });
+
+        
+
+   
+    cursors = this.input.keyboard.createCursorKeys();
+
+    }
+
+    function update ()
+    {
+        if (cursors.right.isDown)
+    {
+        player.setVelocityX(30);
+
+        player.anims.play('right', true);
+    }
+     else if (cursors.up.isDown)
+    {
+        player.setVelocityY(-30);
+
+        player.anims.play('up', true);
+    }
+    else if(cursors.down.isDown)
+    {
+        player.setVelocityY(30);
+
+        player.anims.play('down');
+    }
+        else {
+            player.setVelocity(0);
+            
+            player.anims.play('face down');
+        }
+
+
+        function makesidewall (x,i,y,walls){
+            
+            for(i=0;i<50;i++){
+
+                walls.create(x,y+6,'wallside')
+            }
+
+        }
+    }
+</script>
+
+</body>
+</html>
