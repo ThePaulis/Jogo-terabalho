@@ -39,12 +39,19 @@
     var i = 0;
     var cursors;
     var player;
+    
     var walls;
     var gameOver = false;
     var game = new Phaser.Game(config);
     var attack = false;
+    var specialAttack = false;
     var hp = 10;
-    
+    var atk = 1;
+    var score = 0;
+    var scorechest = 0;
+    var scoreText;
+    var special = 0;
+    var specialText;
 
     function preload ()
     {
@@ -55,8 +62,8 @@
         this.load.image('wallback', 'assets/tilesets/walls/wall3.png');
         this.load.image('slime', 'assets/characters/2slime.png'); 
         this.load.image('labwall', 'assets/wall_mid.png');
-        
-        
+        this.load.spritesheet('special', 'assets/special.png',{ frameWidth: 960, frameHeight: 480 });
+        this.load.image('chest', 'assets/chest.png');
 
     }
 
@@ -120,17 +127,24 @@
 
 
 
-
+         
         player = this.physics.add.sprite(0, 500, 'guy');
 
         player.setCollideWorldBounds(true);
+
+        chests = this.physics.add.group();
         
         enemies= this.physics.add.group();
 
         var enemie = enemies.create(300,00,'slime');
+        
+        
+
         enemie.setCollideWorldBounds(true);
-        enemie.setVelocity(Phaser.Math.Between(-70, 70), 20);
+        enemie.setVelocity(Phaser.Math.Between(100, 200), 50);
         enemie.allowGravity = false;
+
+        
 
 
         this.anims.create({
@@ -176,6 +190,18 @@
         frameRate: 10,
         
     });
+   
+    this.anims.create({
+        key: 'special',
+        frames: this.anims.generateFrameNumbers('special', {start: 0, end: 12}),
+        frameRate: 10,
+        repeat: -1
+        
+    });
+
+     
+
+    
 
 
 
@@ -185,11 +211,35 @@
     this.physics.add.collider(enemies, walls);
     this.physics.add.collider(enemie, walls);
 
-    this.physics.add.collider(player, enemies, hitenemie, null, this);
+    
+   
+var chest = chests.create(920,40,'chest');
+chest.setCollideWorldBounds(true);
+        chest.setVelocity(0,0);
+        chest.allowGravity = true;
+    this.physics.add.collider(player, chests);
+    this.physics.add.collider(chests, walls);
+    this.physics.add.collider(chest, walls);
+    this.physics.add.collider(enemies, chests);
+    this.physics.add.collider(enemie, chests);
+    chest.disableBody(true,true);
+ 
+        
+   
+    this.physics.add.collider(player, chests, hitchest, null, this);  
+ 
     
 
+    this.physics.add.collider(player, enemies, hitenemie, null, this);  
+     
+   
+    
+    scoreText = this.add.text(32, 32, 'score: 0', { fontSize: '32px', fill: '#001' });
 
- 
+
+    specialText = this.add.text(600, 32, 'Special: 0%', { fontSize: '32px', fill: '#001' });
+
+
 
     }
 
@@ -203,39 +253,58 @@
 
         if (cursors.right.isDown)
     {
-        player.setVelocityX(100);
+        player.setVelocityX(200);
 
         player.anims.play('right', true);
         attack=false;
+        specialAttack=false;
+
     }
     
      else if (cursors.up.isDown)
     {
-        player.setVelocityY(-100);
+        player.setVelocityY(-200);
 
         player.anims.play('up', true);
         attack=false;
-    }
+        
+    }        
+
     else if(cursors.down.isDown)
     {
-        player.setVelocityY(100);
+        player.setVelocityY(200);
 
         player.anims.play('down', true);
         attack=false;
+        specialAttack=false;
 
     }
     else if(cursors.left.isDown)
     {
-        player.setVelocityX(-100);
+        player.setVelocityX(-200);
 
         player.anims.play('left', true);
         attack=false;
+        specialAttack=false;
+
     }
     else if(cursors.space.isDown)
     {
         player.setVelocityX(50);
         player.anims.play('atackR', true);
         attack=true;
+
+        specialAttack=false;
+    }
+    else if(cursors.shift.isDown && special >= 10)
+    {
+       
+        player.anims.play('special', true);
+        specialAttack=true;
+        attack=false;
+        special = special - 1;
+        
+        specialText.setText('special : %'+ special);
    
     }
     
@@ -247,21 +316,53 @@
             attack=false;
         }
 
-    
-      
+   
     }
 
 
-    function hitenemie (player, enemie)
+    function hitenemie (player, enemie,chest)
 {
+
+   
     if(attack == true){
 
-        hp=hp-1;
+        hp=hp-atk;
         
         if(hp==0){
             
-        enemie.destroy();
+       enemie.disableBody(true,true);
+        score += 10;
+        special += 10;
+        scorechest += 10;
+    scoreText.setText('Score: ' + score);
+    specialText.setText('special : %'+ special);
+        hp =3;
         }
+        if(scorechest == 150){
+
+            var chest = chests.create(920,40,'chest');
+
+}
+        
+        if (enemies.countActive(true) === 0)
+    {
+        var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);   
+        
+
+        var i =1;
+            
+            enemie = enemies.create(x,500,'slime');
+           
+            
+            enemie.setBounce(1);
+
+        enemie.setCollideWorldBounds(true);
+        enemie.setVelocity(Phaser.Math.Between(100, 200), 50);
+
+      
+
+    }
+    
     }
       else{
     this.physics.pause();
@@ -270,7 +371,23 @@
 
     gameOver = true;
     }
+    
 }
+
+
+function hitchest (player, chest)
+{
+
+   if(attack == true){
+    
+    chest.disableBody(true,true);
+   }
+    
+}
+
+
+
+
 
 
 
