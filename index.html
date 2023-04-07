@@ -49,7 +49,7 @@
         var game = new Phaser.Game(config);
         var attack = false;
         var specialAttack = false;
-        var hp = 10;
+        var hp = 4;
         var atk = 1;
         var score = 0;
         var scorechest = 0;
@@ -68,7 +68,7 @@
             this.load.image('labwall', 'assets/wall_mid.png');
             this.load.spritesheet('special', 'assets/special.png', { frameWidth: 960, frameHeight: 480 });
             this.load.image('chest', 'assets/chest.png');
-
+            this.load.image('item', 'assets/weapon.png');
         }
 
         function create() {
@@ -96,10 +96,12 @@
             player.setCollideWorldBounds(true);
 
             chests = this.physics.add.group();
+            itens = this.physics.add.group();
 
             enemies = this.physics.add.group();
 
             var enemie = enemies.create(300, 00, 'slime');
+            
 
             enemie.setCollideWorldBounds(true);
             enemie.setVelocity(Phaser.Math.Between(100, 200), 50);
@@ -177,11 +179,25 @@
             this.physics.add.collider(enemie, chests);
             chest.disableBody(true, true);
 
+            var item = itens.create(920, 40, 'item');
+            item.setCollideWorldBounds(true);
+            item.setVelocity(0, 0);
+            item.allowGravity = true;
+            this.physics.add.collider(player, itens);
+            this.physics.add.collider(itens, walls);
+            this.physics.add.collider(item, walls);
+            this.physics.add.collider(enemies, itens);
+            this.physics.add.collider(enemie, itens);
+            item.disableBody(true, true);
 
-            this.physics.add.collider(player, chests, hitchest, null, this);
 
 
-            this.physics.add.collider(player, enemies, hitenemie, null, this);
+            this.physics.add.collider(player, chests , hitchest, null, this);
+
+
+            this.physics.add.collider(player, enemies , hitenemie, null, this);
+            
+            this.physics.add.collider(player, itens , hititem, null, this);
 
 
             scoreText = this.add.text(32, 32, 'Score: 0', { fontSize: '32px', fill: '#fff' });
@@ -218,9 +234,9 @@
             } else if (cursors.space.isDown) {
                 velocityX = 50;
                 animKey = 'atackR';
-            } else if (cursors.shift.isDown && special >= 0) {
+            } else if (cursors.shift.isDown && special >= 100) {
                 animKey = 'special';
-
+                special = special -1;
                 specialText.setText('special : %' + special);
 
 
@@ -228,7 +244,7 @@
 
                 level++;
 
-                for (var i = 0; i < level * 5; i++) {
+                for (var i = 0; i < level * 2; i++) {
                     var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
                     enemies.create(x, 500, 'slime').setBounce(1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200), 50);
                 }
@@ -273,7 +289,7 @@
                 scoreText.setText('Score: ' + score);
                 specialText.setText('special : %' + special);
                 hp = 3;
-                if (scorechest == 150) {
+                if (scorechest == 10) {
                     chests.create(920, 40, 'chest');
                 }
             }
@@ -281,24 +297,38 @@
             if (enemies.countActive(true) === 0) {
                 level++;
 
-                for (var i = 0; i < level * 5; i++) {
+                for (var i = 0; i < level * 2; i++) {
                     var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-                    enemies.create(x, 500, 'slime').setBounce(1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200), 50);
+                    enemies.create(x, 500, 'slime').setBounce(1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200),Phaser.Math.Between(50, 200));
                 }
 
             }
         }
 
 
-        function hitchest(player, chest) {
+        function hitchest(player, chest,item) {
 
 
             if (attack == true) {
 
-                chest.disableBody(rue, true);
+                chest.disableBody(true, true);
+
+                itens.create(920, 40, 'item');
+
+
             }
 
         }
+
+        function hititem(player,item) {
+
+
+        atk = 4;
+        item.disableBody(true, true);
+
+
+
+}
 
 
 
