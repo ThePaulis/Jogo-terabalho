@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Making your first Phaser 3 Game - Part 1</title>
+    <script src=https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js
+        integrity="sha512-kg6fSrg6FkD9Ua02PzuA289KatVkTp6HdiFrSKwnz1bKBeKe5JG54rNeYZeghYO/I4ka49rb9H/9Ezcq9Se3iQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script type="text/javascript">
+
+        var config = {
+            type: Phaser.AUTO,
+            width: 960,
+            height: 480,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+        var speed = 100;
+        var scale = 1;
+        var P_size = 48 * scale;
+        var x = 9;
+        var y = 23;
+        var i = 0;
+        var cursors;
+        var player;
+
+        var walls;
+        var gameOver = false;
+        var game = new Phaser.Game(config);
+        var attack = false;
+        var specialAttack = false;
+        var hp = 10;
+        var atk = 1;
+        var score = 0;
+        var scorechest = 0;
+        var scoreText;
+        var special = 0;
+        var specialText;
+        var level = 1;
+
+        function preload() {
+            this.load.image('background', 'assets/background4b.png');
+            this.load.spritesheet('guy', 'assets/characters/player.png', { frameWidth: 48, frameHeight: 48 });
+            this.load.image('wallup', 'assets/tilesets/walls/wall1.png');
+            this.load.image('wallside', 'assets/tilesets/walls/wall2.png');
+            this.load.image('wallback', 'assets/tilesets/walls/wall3.png');
+            this.load.image('slime', 'assets/characters/2slime.png');
+            this.load.image('labwall', 'assets/wall_mid.png');
+            this.load.spritesheet('special', 'assets/special.png', { frameWidth: 960, frameHeight: 480 });
+            this.load.image('chest', 'assets/chest.png');
+
+        }
+
+        function create() {
+            this.add.image(480, 240, 'background');
+            walls = this.physics.add.staticGroup();
+
+            // Create walls at the top of the screen
+            for (let x = 25; x <= 990; x += 45) {
+                walls.create(x, 21, 'wallup');
+            }
+
+            // Create walls on the left and right sides of the screen
+            for (let y = 23; y <= 473; y += 6) {
+                walls.create(9, y, 'wallside');
+                walls.create(950, y - 8, 'wallside');
+            }
+
+            // Create a wall at the bottom of the screen
+            for (let x = -11; x <= 955; x += 21) {
+                walls.create(x, 470, 'wallback');
+            }
+
+
+            player = this.physics.add.sprite(0, 500, 'guy');
+            player.setCollideWorldBounds(true);
+
+            chests = this.physics.add.group();
+
+            enemies = this.physics.add.group();
+
+            var enemie = enemies.create(300, 00, 'slime');
+
+            enemie.setCollideWorldBounds(true);
+            enemie.setVelocity(Phaser.Math.Between(100, 200), 50);
+            enemie.allowGravity = false;
+
+            this.anims.create({
+                key: 'face down',
+                frames: [{ key: 'guy', frame: 0 }],
+                frameRate: 20,
+
+            });
+
+            this.anims.create({
+                key: 'right',
+                frames: this.anims.generateFrameNumbers('guy', { start: 6, end: 11 }),
+                frameRate: 20,
+                repeat: -1
+            });
+
+
+            this.anims.create({
+                key: 'up',
+                frames: this.anims.generateFrameNumbers('guy', { start: 12, end: 17 }),
+                frameRate: 20,
+                repeat: -1
+            });
+
+
+            this.anims.create({
+                key: 'down',
+                frames: this.anims.generateFrameNumbers('guy', { start: 18, end: 23 }),
+                frameRate: 20,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'left',
+                frames: this.anims.generateFrameNumbers('guy', { start: 11, end: 6 }),
+                frameRate: 20,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'atackR',
+                frames: [{ key: 'guy', frame: 43 }],
+                frameRate: 10,
+
+            });
+
+            this.anims.create({
+                key: 'special',
+                frames: this.anims.generateFrameNumbers('special', { start: 0, end: 12 }),
+                frameRate: 10,
+                repeat: -1
+
+            });
+
+
+
+            cursors = this.input.keyboard.createCursorKeys();
+            this.physics.add.collider(player, walls);
+            this.physics.add.collider(enemies, walls);
+            this.physics.add.collider(enemie, walls);
+
+
+
+            var chest = chests.create(920, 40, 'chest');
+            chest.setCollideWorldBounds(true);
+            chest.setVelocity(0, 0);
+            chest.allowGravity = true;
+            this.physics.add.collider(player, chests);
+            this.physics.add.collider(chests, walls);
+            this.physics.add.collider(chest, walls);
+            this.physics.add.collider(enemies, chests);
+            this.physics.add.collider(enemie, chests);
+            chest.disableBody(true, true);
+
+
+            this.physics.add.collider(player, chests, hitchest, null, this);
+
+
+            this.physics.add.collider(player, enemies, hitenemie, null, this);
+
+
+            scoreText = this.add.text(32, 32, 'Score: 0', { fontSize: '32px', fill: '#fff' });
+
+
+            specialText = this.add.text(600, 32, 'Special: 0%', { fontSize: '32px', fill: '#fff' });
+
+            gameOverText = this.add.text(240, 200, 'Game Over', { fontSize: '64px', fill: '#fff' });
+            gameOverText.visible = false;
+
+
+        }
+
+        function update() {
+
+            if (gameOver) return;
+
+            let velocityX = 0;
+            let velocityY = 0;
+            let animKey = 'face down';
+
+            if (cursors.right.isDown) {
+                velocityX = 200;
+                animKey = 'right';
+            } else if (cursors.up.isDown) {
+                velocityY = -200;
+                animKey = 'up';
+            } else if (cursors.down.isDown) {
+                velocityY = 200;
+                animKey = 'down';
+            } else if (cursors.left.isDown) {
+                velocityX = -200;
+                animKey = 'left';
+            } else if (cursors.space.isDown) {
+                velocityX = 50;
+                animKey = 'atackR';
+            } else if (cursors.shift.isDown && special >= 0) {
+                animKey = 'special';
+
+                specialText.setText('special : %' + special);
+
+
+                enemies.clear(true);
+
+                level++;
+
+                for (var i = 0; i < level * 5; i++) {
+                    var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+                    enemies.create(x, 500, 'slime').setBounce(1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200), 50);
+                }
+
+            }
+
+            // if (player.y > 450) {
+            //   gameOver = true;
+            // player.setTint(0xff0000);    // Turn the player sprite red
+            //gameOverText.visible = true; // Show the "Game Over" text
+            //}
+
+            player.setVelocityX(velocityX);
+            player.setVelocityY(velocityY);
+            player.anims.play(animKey, true);
+
+            attack = animKey === 'atackR';
+            specialAttack = animKey === 'special';
+
+
+        }
+
+
+
+
+        function hitenemie(player, enemie, chest) {
+
+            if (!attack) {
+                this.physics.pause();
+                player.anims.play('face down');
+                gameOver = true;
+                return;
+            }
+
+            hp -= atk;
+
+            if (hp <= 0) {
+                enemie.disableBody(true, true);
+                score += 10;
+                special += 10;
+                scorechest += 10;
+                scoreText.setText('Score: ' + score);
+                specialText.setText('special : %' + special);
+                hp = 3;
+                if (scorechest == 150) {
+                    chests.create(920, 40, 'chest');
+                }
+            }
+
+            if (enemies.countActive(true) === 0) {
+                level++;
+
+                for (var i = 0; i < level * 5; i++) {
+                    var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+                    enemies.create(x, 500, 'slime').setBounce(1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200), 50);
+                }
+
+            }
+        }
+
+
+        function hitchest(player, chest) {
+
+
+            if (attack == true) {
+
+                chest.disableBody(rue, true);
+            }
+
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>
