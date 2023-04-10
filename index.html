@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Making your first Phaser 3 Game - Part 1</title>
+    <title>Maze Quest</title>
     <script src=https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js
         integrity="sha512-kg6fSrg6FkD9Ua02PzuA289KatVkTp6HdiFrSKwnz1bKBeKe5JG54rNeYZeghYO/I4ka49rb9H/9Ezcq9Se3iQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -29,6 +29,8 @@
                     debug: false
                 }
             },
+
+            //key: 'my-game', // Add this line to assign a key to the scene
             scene: {
                 preload: preload,
                 create: create,
@@ -49,7 +51,7 @@
         var game = new Phaser.Game(config);
         var attack = false;
         var specialAttack = false;
-        var hp = 4;
+        var hp = 5;
         var atk = 1;
         var score = 0;
         var scorechest = 0;
@@ -57,6 +59,11 @@
         var special = 0;
         var specialText;
         var level = 1;
+        var song;
+        var dead;
+        var hit;
+
+    
 
         function preload() {
             this.load.image('background', 'assets/background4b.png');
@@ -69,12 +76,23 @@
             this.load.spritesheet('special', 'assets/special.png', { frameWidth: 960, frameHeight: 480 });
             this.load.image('chest', 'assets/chest.png');
             this.load.image('item', 'assets/weapon.png');
+
+            this.load.audio('hit','assets/hit.mp3');
+            this.load.audio('dead','assets/dead.mp3');
+            this.load.audio('song','assets/song1.mp3');
+
+
         }
 
         function create() {
             this.add.image(480, 240, 'background');
             walls = this.physics.add.staticGroup();
 
+           this.hit = this.sound.add('hit');
+           this.dead = this.sound.add('dead');
+           this.song = this.sound.add('song');
+
+          
             // Create walls at the top of the screen
             for (let x = 25; x <= 990; x += 45) {
                 walls.create(x, 21, 'wallup');
@@ -208,13 +226,44 @@
             gameOverText = this.add.text(240, 200, 'Game Over', { fontSize: '64px', fill: '#fff' });
             gameOverText.visible = false;
 
-
         }
 
+        
         function update() {
 
-            if (gameOver) return;
+            if (gameOver) {
+                // create a game over text object
+                let gameOverText = this.add.text(this.game.config.width / 2, this.game.config.height / 2, 'GAME OVER', { fontSize: '32px', fill: '#fff' });
+                gameOverText.setOrigin(0.5);
 
+                // stop all game objects, input, and events
+                this.physics.pause();
+                this.input.keyboard.enabled = false;
+                this.events.off();
+
+                // optionally, restart the game after a certain amount of time
+                this.time.addEvent({
+                    delay: 2000,
+                    callback: () => {
+
+                        // reset gameOver condition to false
+                        gameOver = false;
+                        
+                        // re-enable keyboard input
+                        this.input.keyboard.enabled = true;
+                        
+                         // restart the scene
+                        this.scene.restart(); 
+                        score = 0;
+                        scorechest =0;
+                        special =0;
+
+                    },
+                    loop: false
+                });
+            }
+
+           
             let velocityX = 0;
             let velocityY = 0;
             let animKey = 'face down';
@@ -236,7 +285,7 @@
                 animKey = 'atackR';
             } else if (cursors.shift.isDown && special >= 100) {
                 animKey = 'special';
-                special = special -1;
+                special = special - 10;
                 specialText.setText('special : %' + special);
 
 
@@ -246,16 +295,13 @@
 
                 for (var i = 0; i < level * 2; i++) {
                     var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-                    enemies.create(x, 500, 'slime').setBounce(1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200), 50);
+                    enemies.create(x, 500, 'slime').setBounce(1.1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200), 50);
                 }
 
             }
 
-            // if (player.y > 450) {
-            //   gameOver = true;
-            // player.setTint(0xff0000);    // Turn the player sprite red
-            //gameOverText.visible = true; // Show the "Game Over" text
-            //}
+
+
 
             player.setVelocityX(velocityX);
             player.setVelocityY(velocityY);
@@ -264,11 +310,24 @@
             attack = animKey === 'atackR';
             specialAttack = animKey === 'special';
 
+            //restart button
+                this.restartButton = this.add.text(10, 10, 'Restart', { fill: '#0f0' })
+                .setInteractive()
+                .on('pointerdown', () => {
+                    score =0;
+                    scorechest = 0;
+                    special = 0;
+                    level =1;
+        this.scene.restart();
+             
+                
+            }); 
 
+        
         }
+    
 
-
-
+    
 
         function hitenemie(player, enemie, chest) {
 
@@ -277,6 +336,10 @@
                 player.anims.play('face down');
                 gameOver = true;
                 return;
+                score = 0;
+                scorechest = 0;
+                special = 0;
+                level = 1;
             }
 
             hp -= atk;
@@ -289,7 +352,7 @@
                 scoreText.setText('Score: ' + score);
                 specialText.setText('special : %' + special);
                 hp = 3;
-                if (scorechest == 10) {
+                if (scorechest == 100) {
                     chests.create(920, 40, 'chest');
                 }
             }
@@ -299,7 +362,7 @@
 
                 for (var i = 0; i < level * 2; i++) {
                     var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
-                    enemies.create(x, 500, 'slime').setBounce(1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200),Phaser.Math.Between(50, 200));
+                    enemies.create(x, 500, 'slime').setBounce(1.1).setCollideWorldBounds(true).setVelocity(Phaser.Math.Between(100, 200),Phaser.Math.Between(50, 200));
                 }
 
             }
@@ -323,17 +386,12 @@
         function hititem(player,item) {
 
 
-        atk = 4;
+        atk = 5;
         item.disableBody(true, true);
 
-
-
 }
-
-
 
     </script>
 
 </body>
-
 </html>
