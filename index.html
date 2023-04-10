@@ -59,10 +59,7 @@
         var special = 0;
         var specialText;
         var level = 1;
-        var song;
-        var dead;
-        var hit;
-
+       
     
 
         function preload() {
@@ -77,10 +74,6 @@
             this.load.image('chest', 'assets/chest.png');
             this.load.image('item', 'assets/weapon.png');
 
-            this.load.audio('hit','assets/hit.mp3');
-            this.load.audio('dead','assets/dead.mp3');
-            this.load.audio('song','assets/song1.mp3');
-
 
         }
 
@@ -88,9 +81,6 @@
             this.add.image(480, 240, 'background');
             walls = this.physics.add.staticGroup();
 
-           this.hit = this.sound.add('hit');
-           this.dead = this.sound.add('dead');
-           this.song = this.sound.add('song');
 
           
             // Create walls at the top of the screen
